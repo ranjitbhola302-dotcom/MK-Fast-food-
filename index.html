@@ -64,20 +64,8 @@
     --shadow:0 18px 40px -22px rgba(120,50,20,.45);
     --radius:20px;
   }
-  @media (prefers-color-scheme: dark){#site{
-      --bg:#171210;
-      --surface:#211A17;
-      --surface-2:#2B211C;
-      --ink:#F6EDE6;
-      --ink-dim:#B6A398;
-      --line:rgba(255,255,255,.10);
-      --red:#F0544F;
-      --red-deep:#D62828;
-      --orange:#FF8154;
-      --yellow:#F7B801;
-      --shadow:0 18px 40px -22px rgba(0,0,0,.8);
-    }
   }#site *{box-sizing:border-box}#site{scroll-behavior:smooth}#site{
+    overflow-x:hidden;
     margin:0;
     background:
       radial-gradient(1100px 520px at 82% -8%, rgba(247,184,1,.20), transparent 62%),
@@ -98,7 +86,7 @@
     border-bottom:1px solid var(--line);}#site .nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 0}#site .brand{display:flex;align-items:center;gap:.65rem;min-width:0}#site .brand img{width:42px;height:42px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px var(--yellow),0 6px 14px -6px rgba(214,40,40,.7)}#site .brand b{font-family:"Fraunces",serif;font-size:1.12rem;letter-spacing:-.02em;display:block;line-height:1.1}#site .brand span{font-size:.68rem;color:var(--ink-dim);letter-spacing:.08em;text-transform:uppercase}#site .nav-links{display:none;gap:1.6rem;font-size:.9rem;font-weight:500;color:var(--ink-dim)}#site .nav-links a:hover{color:var(--red)}#site .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
     font-weight:700;font-size:.92rem;padding:.75rem 1.3rem;border-radius:999px;border:1px solid transparent;
     transition:transform .18s ease, box-shadow .18s ease, background .18s ease;cursor:pointer}#site .btn-primary{background:var(--red);color:#fff;box-shadow:0 12px 24px -12px rgba(214,40,40,.85)}#site .btn-primary:hover{background:var(--red-deep);transform:translateY(-2px)}#site .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}#site .btn-ghost:hover{background:var(--surface-2);transform:translateY(-2px)}#site .btn-sm{padding:.55rem 1rem;font-size:.82rem}#site /* ---------- hero ---------- */
-  .hero{display:grid;gap:2.2rem;padding:2.6rem 0 1.6rem;align-items:center}#site .hero h1{font-size:clamp(2.5rem,7.4vw,4.4rem);margin:.9rem 0 0}#site .hero h1 em{font-style:normal;color:var(--red);position:relative;white-space:nowrap}#site .hero h1 em::after{content:"";position:absolute;left:0;right:0;bottom:.06em;height:.16em;
+  .hero{display:grid;gap:2.2rem;padding:2.6rem 0 1.6rem;align-items:center}#site .hero h1{font-size:clamp(2rem,6.6vw,4.4rem);margin:.9rem 0 0;overflow-wrap:break-word}#site .hero h1 em{font-style:normal;color:var(--red);position:relative}#site .hero h1 em::after{content:"";position:absolute;left:0;right:0;bottom:.06em;height:.16em;
     background:var(--yellow);z-index:-1;border-radius:4px;transform:rotate(-.6deg)}#site .hero p.lead{font-size:1.05rem;color:var(--ink-dim);max-width:34ch;margin:1rem 0 1.6rem}#site .hero-cta{display:flex;flex-wrap:wrap;gap:.7rem}#site .stats{display:flex;flex-wrap:wrap;gap:1.6rem;margin-top:2rem;padding-top:1.4rem;border-top:1px solid var(--line)}#site .stat b{font-family:"Fraunces",serif;font-size:1.5rem;display:block;line-height:1}#site .stat span{font-size:.76rem;color:var(--ink-dim);letter-spacing:.04em}#site .hero-art{position:relative;justify-self:center;width:min(360px,80vw);aspect-ratio:1}#site .hero-art::before{content:"";position:absolute;inset:-6%;border-radius:50%;
     background:conic-gradient(from 140deg, var(--yellow), var(--orange), var(--red), var(--yellow));
     opacity:.35;filter:blur(26px)}#site .hero-art img{position:relative;width:100%;height:100%;object-fit:cover;border-radius:50%;
@@ -118,7 +106,10 @@
     border-radius:26px;padding:2.4rem 1.6rem;text-align:center;position:relative;overflow:hidden;
     box-shadow:0 26px 50px -30px rgba(168,28,28,.9)}#site .band::after{content:"";position:absolute;width:340px;height:340px;border-radius:50%;
     background:rgba(247,184,1,.28);filter:blur(50px);right:-90px;top:-110px}#site .band h2{font-size:clamp(1.8rem,5vw,2.6rem);position:relative}#site .band p{color:rgba(255,255,255,.85);margin:.6rem auto 1.5rem;max-width:44ch;position:relative;font-size:.95rem}#site .band .btn-primary{background:#fff;color:var(--red);box-shadow:none;position:relative}#site .band .btn-primary:hover{background:var(--yellow);color:#3a1a00}#site /* ---------- info ---------- */
-  .info-grid{display:grid;gap:1rem;grid-template-columns:1fr}#site .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem}#site .card h3{font-size:1.02rem;display:flex;align-items:center;gap:.5rem}#site .card .k{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:.5rem}#site .card dl{margin:.7rem 0 0;font-size:.9rem}#site .card dt{color:var(--ink-dim);font-size:.78rem;margin-top:.6rem}#site .card dd{margin:.1rem 0 0;font-weight:600}#site .card a{color:var(--red);font-weight:700}#site footer{border-top:1px solid var(--line);padding:2rem 0 2.6rem;margin-top:1rem;font-size:.84rem;color:var(--ink-dim)}#site .foot{display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:center}#site .foot .brand b{color:var(--ink)}#site .foot nav{display:flex;flex-wrap:wrap;gap:1.1rem}#site .foot nav a:hover{color:var(--red)}#site .reveal{opacity:0;transform:translateY(14px)}#site .reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.3,1)}
+  .info-grid{display:grid;gap:1rem;grid-template-columns:1fr}#site .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem}#site .card h3{font-size:1.02rem;display:flex;align-items:center;gap:.5rem}#site .card .k{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:.5rem}#site .card dl{margin:.7rem 0 0;font-size:.9rem}#site .card dt{color:var(--ink-dim);font-size:.78rem;margin-top:.6rem}#site .card dd{margin:.1rem 0 0;font-weight:600}#site .card a{color:var(--red);font-weight:700}#site footer{border-top:1px solid var(--line);padding:2rem 0 2.6rem;margin-top:1rem;font-size:.84rem;color:var(--ink-dim)}#site .foot{display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:center}#site .foot .brand b{color:var(--ink)}#site .foot nav{display:flex;flex-wrap:wrap;gap:1.1rem}#site .foot nav a:hover{color:var(--red)}
+
+  @media (max-width:400px){#site .brand b{font-size:.98rem}#site .brand span{display:none}#site .nav{padding:.55rem 0}#site .hero{padding-top:1.8rem}
+  }#site .reveal{opacity:0;transform:translateY(14px)}#site .reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.3,1)}
 
   @media (min-width:720px){#site .menu-grid{grid-template-columns:1fr 1fr}#site .steps{grid-template-columns:repeat(3,1fr)}#site .info-grid{grid-template-columns:1.1fr .9fr .9fr}
   }
@@ -139,8 +130,6 @@
     @keyframes pop { from { transform: scale(.92); opacity: 0 } to { transform: scale(1); opacity: 1 } }#app .animate-pop{ animation: pop .25s ease-out; }#app .safe-bottom{ padding-bottom: env(safe-area-inset-bottom); }
   
 </style>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-180.png">
 </head>
 <body>
 <div id="site">
@@ -809,6 +798,8 @@ const state = {
   ownerTab: 'active',
   knownNew: new Set(),
   sales: {},
+  manageDirty: false,   // owner is typing in the menu editor
+  shopDirty: false,     // owner is typing in the shop-details form
   activeOrderId: null,
   booted: false,
   siteCat: 'all'
@@ -1017,14 +1008,14 @@ function onMenuEvent(ev) {
   if (!Object.keys(state.menu).length) state.menu = Object.assign({}, DEFAULT_MENU);
   renderSiteMenu();
   renderFoodItems(getCurrentCatFilter());
-  if (state.ownerTab === 'manage') renderManageMenu();
+  if (state.ownerTab === 'manage' && !state.manageDirty) renderManageMenu();
 }
 
 function onShopEvent(ev) {
   const whole = mergePath(state.shop, ev);
   if (whole) state.shop = Object.assign({}, DEFAULT_SHOP, whole);
   renderSiteInfo();
-  if (state.ownerTab === 'manage') fillShopForm();
+  if (state.ownerTab === 'manage' && !state.shopDirty) fillShopForm();
 }
 
 function applyMeta(meta) {
@@ -1686,7 +1677,12 @@ function switchOwnerTab(tab) {
       : 'flex-1 py-2 rounded-lg text-slate-600 hover:text-slate-900 text-center';
     panel.classList.toggle('hidden', !on);
   });
-  if (tab === 'manage') { renderManageMenu(); fillShopForm(); }
+  if (tab === 'manage') {
+    state.manageDirty = false;
+    state.shopDirty = false;
+    renderManageMenu();
+    fillShopForm();
+  }
   else if (tab === 'sales') { renderSales(); renderOwnerOrders(); }
   else renderOwnerOrders();
 }
@@ -1880,6 +1876,12 @@ const CATS = ['biryani', 'chowmein', 'rolls', 'chicken', 'egg', 'paratha'];
 function renderManageMenu() {
   const box = document.getElementById('manage-menu-list');
   if (!box) return;
+  if (!box.dataset.bound) {
+    const markDirty = () => { state.manageDirty = true; };
+    box.addEventListener('input', markDirty);
+    box.addEventListener('change', markDirty);
+    box.dataset.bound = '1';
+  }
   const ids = Object.keys(state.menu);
   box.innerHTML = ids.map(id => {
     const it = state.menu[id];
@@ -1924,6 +1926,7 @@ function collectMenuFromForm() {
 
 async function saveMenu() {
   const menu = collectMenuFromForm();
+  state.manageDirty = false;
   state.menu = menu;
   try {
     if (state.mode === 'cloud') await fb.put('menu', menu);
@@ -1964,7 +1967,15 @@ function deleteMenuItem(id) {
 
 /* ---------------- MANAGE: shop details ---------------- */
 function fillShopForm() {
+  if (state.shopDirty) return;
   const s = state.shop;
+  ['mg-hours', 'mg-peak', 'mg-address', 'mg-landmark', 'mg-phone', 'mg-whatsapp'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.dataset.bound) {
+      el.addEventListener('input', () => { state.shopDirty = true; });
+      el.dataset.bound = '1';
+    }
+  });
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
   set('mg-hours', s.hours);
   set('mg-peak', s.peak);
@@ -1975,6 +1986,7 @@ function fillShopForm() {
 }
 
 async function saveShopInfo() {
+  state.shopDirty = false;
   const shop = {
     hours: document.getElementById('mg-hours').value.trim(),
     peak: document.getElementById('mg-peak').value.trim(),
@@ -2062,9 +2074,7 @@ async function installApp() {
 }
 
 function registerSW() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch((e) => console.warn('SW not registered', e));
-  }
+  /* single-file build: no service worker */
 }
 
 </script>
