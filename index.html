@@ -798,6 +798,9 @@ const state = {
   ownerTab: 'active',
   knownNew: new Set(),
   sales: {},
+  track: {},
+  trackStream: null,
+  ordersStream: false,
   manageDirty: false,   // owner is typing in the menu editor
   shopDirty: false,     // owner is typing in the shop-details form
   activeOrderId: null,
@@ -905,10 +908,9 @@ window.addEventListener('load', async () => {
 
 async function connectCloud() {
   try {
-    const [orders, meta, menu, shop] = await Promise.all([
-      fb.get('orders'), fb.get('meta'), fb.get('menu'), fb.get('shop')
+    const [meta, menu, shop] = await Promise.all([
+      fb.get('meta'), fb.get('menu'), fb.get('shop')
     ]);
-    state.orders = orders || {};
     applyMeta(meta);
     // menu v2 = the Maa Kinjeswari menu. Any older menu (from the previous
     // burger list) is replaced once, then owner edits are kept forever.
@@ -924,7 +926,6 @@ async function connectCloud() {
     }
     if (shop) state.shop = Object.assign({}, DEFAULT_SHOP, shop);
     state.mode = 'cloud';
-    startStream('orders', onOrdersEvent);
     startStream('meta', onMetaEvent);
     startStream('menu', onMenuEvent);
     startStream('shop', onShopEvent);
@@ -963,9 +964,10 @@ function updateNetLabel() {
 
 /* ---------------- live streams ---------------- */
 const streamRetry = {};
-function startStream(path, handler) {
+function startStream(path, handler, useAuth) {
   try {
-    const es = new EventSource(DB_URL + '/' + path + '.json');
+    const url = DB_URL + '/' + path + '.json' + (useAuth && OWNER_TOKEN ? '?auth=' + encodeURIComponent(OWNER_TOKEN) : '');
+    const es = new EventSource(url);
     es.addEventListener('put', (e) => handler(JSON.parse(e.data), false));
     es.addEventListener('patch', (e) => handler(JSON.parse(e.data), true));
     es.addEventListener('cancel', () => { es.close(); startPolling(path, handler); });
@@ -1331,19 +1333,43 @@ function validateForm() {
 async function nextToken() {
   const existingMax = Object.values(state.orders)
     .reduce((m, o) => Math.max(m, Number(o && o.token_no) || 0), 0);
+  const trackedMax = Object.values(state.track || {})
+    .reduce((m, o) => Math.max(m, Number(o && o.token_no) || 0), 0);
 
   if (state.mode === 'cloud') {
     let meta = null;
     try { meta = await fb.get('meta'); } catch (e) {}
-    const counter = Math.max(Number(meta && meta.counter) || 0, existingMax);
+    const counter = Math.max(Number(meta && meta.counter) || 0, existingMax, trackedMax);
     const token = counter + 1;
     try { await fb.put('meta/counter', token); } catch (e) {}
     return token;
   }
-  const counter = Math.max(Number(localStorage.getItem(LS.counter)) || 0, existingMax);
+  const counter = Math.max(Number(localStorage.getItem(LS.counter)) || 0, existingMax, trackedMax);
   const token = counter + 1;
   localStorage.setItem(LS.counter, String(token));
   return token;
+}
+
+function trackRecord(order) {
+  return {
+    token_no: order.token_no,
+    status: order.status,
+    total: order.total,
+    order_type: order.order_type,
+    items: order.items,
+    name: order.name,
+    created_at: order.created_at
+  };
+}
+
+async function publishTrack(order) {
+  const rec = trackRecord(order);
+  state.track = state.track || {};
+  state.track[order.id] = rec;
+  try {
+    if (state.mode === 'cloud') await fb.put('track/' + order.id, rec);
+    else lsSet('mkff_track', state.track);
+  } catch (e) {}
 }
 
 async function saveOrder(order) {
@@ -1361,11 +1387,6 @@ async function placeOrder() {
   const phone = document.getElementById('cust-phone').value.trim();
   const note = document.getElementById('cust-note').value.trim();
   if (!name || !/^[6-9]\d{9}$/.test(phone)) { toast(t('toast.check')); return; }
-
-  const fiveMinAgo = Date.now() - 5 * 60 * 1000;
-  const dup = Object.values(state.orders).find(o => o && o.phone === phone &&
-    o.status !== 'cancelled' && new Date(o.created_at).getTime() > fiveMinAgo);
-  if (dup) { toast(t('toast.dup')); return; }
 
   let total = 0;
   const items = Object.keys(state.cart).map(id => {
@@ -1388,6 +1409,7 @@ async function placeOrder() {
       status: 'new', created_at: new Date().toISOString()
     };
     await saveOrder(order);
+    await publishTrack(order);
     state.activeOrderId = order.id;
     localStorage.setItem(LS.active, order.id);
     state.cart = {};
@@ -1396,6 +1418,7 @@ async function placeOrder() {
     document.getElementById('cust-phone').value = '';
     document.getElementById('cust-note').value = '';
     showTokenScreen(order);
+    watchTrack(order.id);
     toast(t('toast.orderok') + tokenNo);
   } catch (err) {
     console.error(err);
@@ -1407,16 +1430,39 @@ async function placeOrder() {
   }
 }
 
+function watchTrack(orderId) {
+  if (state.trackStream) { try { state.trackStream.close(); } catch (e) {} }
+  if (state.mode !== 'cloud') return;
+  try {
+    const es = new EventSource(DB_URL + '/track/' + orderId + '.json');
+    es.addEventListener('put', (e) => {
+      let payload = {};
+      try { payload = JSON.parse(e.data); } catch (err) { return; }
+      const data = payload.data;
+      if (!data) return;
+      state.track[orderId] = data;
+      showTokenScreen(data);
+    });
+    state.trackStream = es;
+  } catch (e) {}
+}
+
 function maskPhone(phone) {
   if (!phone || phone.length < 10) return '98XXXXXX';
   return phone.substring(0, 2) + 'XXXXXX' + phone.substring(8);
 }
 
-function restoreActiveOrder() {
+async function restoreActiveOrder() {
   const id = localStorage.getItem(LS.active);
   if (!id) return;
-  const order = state.orders[id];
-  if (order) { state.activeOrderId = id; showTokenScreen(order); }
+  let order = state.orders[id];
+  if (!order && state.mode === 'cloud') {
+    try { order = await fb.get('track/' + id); } catch (e) { order = null; }
+  }
+  if (!order) return;
+  state.activeOrderId = id;
+  showTokenScreen(order);
+  watchTrack(id);
 }
 
 function showTokenScreen(order) {
@@ -1427,7 +1473,7 @@ function showTokenScreen(order) {
   document.getElementById('token-display-no').innerText = '#' + order.token_no;
   document.getElementById('token-notice-no').innerText = order.token_no;
   document.getElementById('token-display-name').innerText = order.name;
-  document.getElementById('token-display-phone').innerText = maskPhone(order.phone);
+  document.getElementById('token-display-phone').innerText = order.phone ? maskPhone(order.phone) : '';
   document.getElementById('token-display-type').innerText =
     order.order_type === 'parcel' ? t('ck.parcel') : t('ck.khana');
 
@@ -1445,7 +1491,7 @@ function showTokenScreen(order) {
 
 function refreshCustomerToken(force) {
   if (!state.activeOrderId) return;
-  const order = state.orders[state.activeOrderId];
+  const order = state.orders[state.activeOrderId] || (state.track && state.track[state.activeOrderId]);
   if (!order) return;
   const visible = !document.getElementById('cust-screen-token').classList.contains('hidden');
   if (visible || force) {
@@ -1607,6 +1653,7 @@ async function attemptOwnerLogin() {
     document.getElementById('owner-dashboard-content').classList.remove('hidden');
     await loadSales();
     await reseedMenuIfNeeded();
+    await loadOrdersAsOwner();
     renderOwnerOrders();
     toast(t('own.login.ok'));
   } catch (e) {
@@ -1623,6 +1670,16 @@ function ownerLogout() {
   document.getElementById('owner-dashboard-content').classList.add('hidden');
   document.getElementById('owner-login-modal').classList.remove('hidden');
   document.getElementById('owner-pass-input').value = '';
+}
+
+async function loadOrdersAsOwner() {
+  try {
+    state.orders = (await fb.get('orders')) || {};
+    if (!state.ordersStream) {
+      startStream('orders', onOrdersEvent, true);
+      state.ordersStream = true;
+    }
+  } catch (e) { /* keep whatever we have */ }
 }
 
 async function reseedMenuIfNeeded() {
@@ -1719,8 +1776,13 @@ function renderOwnerOrders() {
 async function deleteOrder(orderId) {
   if (!confirm(t('own.confirmdel'))) return;
   try {
-    if (state.mode === 'cloud') await fb.put('orders/' + orderId, null);
-    else { delete state.orders[orderId]; lsSet(LS.orders, state.orders); }
+    if (state.mode === 'cloud') {
+      await fb.put('orders/' + orderId, null);
+      fb.put('track/' + orderId, null).catch(() => {});
+    } else {
+      delete state.orders[orderId]; lsSet(LS.orders, state.orders);
+      delete (state.track || {})[orderId]; lsSet('mkff_track', state.track || {});
+    }
     delete state.orders[orderId];
     if (state.activeOrderId === orderId) { state.activeOrderId = null; localStorage.removeItem(LS.active); }
     renderOwnerOrders();
@@ -1803,6 +1865,13 @@ async function updateOrderStatus(orderId, newStatus) {
     else { if (state.orders[orderId]) state.orders[orderId].status = newStatus; lsSet(LS.orders, state.orders); }
     if (state.orders[orderId]) state.orders[orderId].status = newStatus;
     const ord = state.orders[orderId];
+    if (ord) {
+      const rec = trackRecord(Object.assign({}, ord, { status: newStatus }));
+      state.track = state.track || {};
+      state.track[orderId] = rec;
+      if (state.mode === 'cloud') fb.patch('track/' + orderId, { status: newStatus }).catch(() => {});
+      else lsSet('mkff_track', state.track);
+    }
     if (newStatus === 'done' && ord) {
       const dk = dayKey(ord.created_at);
       if (state.mode === 'cloud') fb.put('sales/' + dk + '/' + orderId, Number(ord.total) || 0).catch(() => {});
