@@ -754,6 +754,7 @@ window.I18N = {"en": {"app.add": "+ ADD", "app.tab.menu": "Menu", "app.tab.owner
 const DB_URL = 'https://fast-food-shop-e735a-default-rtdb.firebaseio.com';
 const API_KEY = 'AIzaSyC1hG6i_IlQgT5opZJh4aVpTyQ0-hIysAM';
 const OWNER_EMAIL = 'mkff@gmail.com';   // only this account can edit the shop
+const MENU_VERSION = 4;                 // bump when the default menu changes
 const AUTH_SIGNIN = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + API_KEY;
 const AUTH_REFRESH = 'https://securetoken.googleapis.com/v1/token?key=' + API_KEY;
 
@@ -921,10 +922,12 @@ async function connectCloud() {
     // menu v2 = the Maa Kinjeswari menu. Any older menu (from the previous
     // burger list) is replaced once, then owner edits are kept forever.
     const menuVersion = meta && meta.menu_version;
-    if (!menu || !Object.keys(menu).length || menuVersion !== 3) {
+    if (!menu || !Object.keys(menu).length || menuVersion !== MENU_VERSION) {
       state.menu = Object.assign({}, DEFAULT_MENU);
-      fb.put('menu', state.menu).catch(() => {});
-      fb.put('meta/menu_version', 3).catch(() => {});
+      // the menu node needs the owner login, so only stamp the version once it worked
+      fb.put('menu', state.menu)
+        .then(() => fb.put('meta/menu_version', MENU_VERSION))
+        .catch(() => {});
     } else {
       state.menu = menu;
     }
@@ -1147,9 +1150,18 @@ async function loadSales() {
   }
 }
 
+const DEFAULT_IMG_BY_ID = {
+  m01: 'biryani', m02: 'chowmin_mix', m03: 'chowmin_veg', m04: 'roll_mix',
+  m05: 'roll_egg', m06: 'roll_veg', m07: 'chicken_pakoda', m08: 'chicken_curry',
+  m09: 'keema', m10: 'omelet', m11: 'bhujia', m12: 'paratha_plane', m13: 'paratha_lachha'
+};
+
 function photoOf(item) {
+  if (!item) return '';
   const map = window.FOOD_IMG || {};
-  return item && item.img && map[item.img] ? map[item.img] : '';
+  if (item.img && map[item.img]) return map[item.img];
+  const byId = DEFAULT_IMG_BY_ID[item.id];
+  return byId && map[byId] ? map[byId] : '';
 }
 
 function escapeHtml(s) {
@@ -1603,6 +1615,7 @@ async function attemptOwnerLogin() {
     document.getElementById('owner-login-modal').classList.add('hidden');
     document.getElementById('owner-dashboard-content').classList.remove('hidden');
     await loadSales();
+    await reseedMenuIfNeeded();
     renderOwnerOrders();
     toast(t('own.login.ok'));
   } catch (e) {
@@ -1619,6 +1632,20 @@ function ownerLogout() {
   document.getElementById('owner-dashboard-content').classList.add('hidden');
   document.getElementById('owner-login-modal').classList.remove('hidden');
   document.getElementById('owner-pass-input').value = '';
+}
+
+async function reseedMenuIfNeeded() {
+  if (state.mode !== 'cloud') return;
+  try {
+    const meta = await fb.get('meta');
+    if (meta && meta.menu_version === MENU_VERSION) return;
+    await fb.put('menu', DEFAULT_MENU);
+    await fb.put('meta/menu_version', MENU_VERSION);
+    state.menu = Object.assign({}, DEFAULT_MENU);
+    renderSiteMenu();
+    renderFoodItems(getCurrentCatFilter());
+    if (state.ownerTab === 'manage') renderManageMenu();
+  } catch (e) { /* owner not allowed or offline - keep what we have */ }
 }
 
 async function restoreOwnerSession() {
