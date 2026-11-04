@@ -1,4 +1,4 @@
-MAA KINJESWARI FAST FOOD - installable web app
+MAA KUNJESWARI FAST FOOD - installable web app
 
 Files (sab ek hi folder me, repo ke root me rakhein):
   index.html            - poora app (website + ordering + owner dashboard)

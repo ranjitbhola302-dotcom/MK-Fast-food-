@@ -1,7 +1,7 @@
 {
-  "name": "Maa Kinjeswari Fast Food",
+  "name": "Maa Kunjeswari Fast Food",
   "short_name": "MK Fast Food",
-  "description": "Order food, get a token and track it live. Maa Kinjeswari Fast Food.",
+  "description": "Order food, get a token and track it live. Maa Kunjeswari Fast Food.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

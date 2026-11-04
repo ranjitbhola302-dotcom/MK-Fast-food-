@@ -1,4 +1,4 @@
-/* Maa Kinjeswari Fast Food - service worker */
+/* Maa Kunjeswari Fast Food - service worker */
 const VERSION = 'mkff-app-v1';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
